@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Icon</title>
+  <!-- The app icon, drawn as SVG. tools/make-icons.mjs screenshots it at each size.
+       ?scale=0.6 shrinks the artwork (maskable / adaptive icons get cropped),
+       ?bg=0 leaves the background transparent, ?art=0 draws only the background. -->
+  <style>html, body { margin: 0; background: transparent; } svg { display: block; width: 100vw; height: 100vh; }</style>
+</head>
+<body>
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="25%" r="90%">
+        <stop offset="0" stop-color="#c9e4a6"/>
+        <stop offset="1" stop-color="#7fb35f"/>
+      </radialGradient>
+      <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#2d4a1a" flood-opacity=".35"/>
+      </filter>
+    </defs>
+    <rect id="bgRect" width="100" height="100" fill="url(#bg)"/>
+    <g id="art">
+      <g filter="url(#shadow)">
+        <!-- the pen -->
+        <rect x="16" y="22" width="68" height="60" rx="11" fill="#e7a3b3" stroke="#e0607e" stroke-width="5"/>
+        <g stroke="rgba(255,255,255,.35)" stroke-width="3">
+          <path d="M30 25v54M44 25v54M58 25v54M72 25v54"/>
+        </g>
+        <!-- the sheep -->
+        <g transform="translate(23 22) scale(.54)">
+          <rect x="30" y="72" width="8" height="16" rx="4" fill="#3b302b"/>
+          <rect x="62" y="72" width="8" height="16" rx="4" fill="#3b302b"/>
+          <g fill="#fffaf0" stroke="#d9cfbd" stroke-width="3">
+            <circle cx="30" cy="50" r="16"/><circle cx="50" cy="40" r="18"/><circle cx="70" cy="50" r="16"/>
+            <circle cx="36" cy="66" r="15"/><circle cx="64" cy="66" r="15"/><circle cx="50" cy="62" r="18"/>
+          </g>
+          <ellipse cx="50" cy="56" rx="26" ry="20" fill="#fffaf0"/>
+          <ellipse cx="32" cy="30" rx="9" ry="5" fill="#3b302b" transform="rotate(-25 32 30)"/>
+          <ellipse cx="68" cy="30" rx="9" ry="5" fill="#3b302b" transform="rotate(25 68 30)"/>
+          <ellipse cx="50" cy="34" rx="14" ry="16" fill="#4a3c35"/>
+          <circle cx="44" cy="31" r="3" fill="#fff"/><circle cx="56" cy="31" r="3" fill="#fff"/>
+          <circle cx="44.6" cy="31.6" r="1.6" fill="#1d1714"/><circle cx="56.6" cy="31.6" r="1.6" fill="#1d1714"/>
+          <ellipse cx="50" cy="42" rx="5" ry="3" fill="#2d2420"/>
+          <circle cx="40" cy="38" r="2.6" fill="#f2a0a0"/><circle cx="60" cy="38" r="2.6" fill="#f2a0a0"/>
+        </g>
+        <!-- the "how many left" tag -->
+        <circle cx="76" cy="26" r="11" fill="#e0607e" stroke="#fff" stroke-width="2.5"/>
+        <path d="M76 31.5 70.6 26.3a3.3 3.3 0 0 1 5.4-3.8 3.3 3.3 0 0 1 5.4 3.8z" fill="#fff"/>
+      </g>
+    </g>
+  </svg>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const scale = +(q.get('scale') || 1);
+    if (q.get('bg') === '0') document.getElementById('bgRect').remove();
+    const art = document.getElementById('art');
+    if (q.get('art') === '0') art.remove();
+    else art.setAttribute('transform', `translate(50 50) scale(${scale}) translate(-50 -50)`);
+  </script>
+</body>
+</html>

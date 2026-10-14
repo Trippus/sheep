@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Bring the Sheep Home</title>
+  <meta name="description" content="Rolig puslespil: skub foldene hen til fårene i samme farve og få alle får hjem. Ingen tidsgrænse.">
+  <meta name="theme-color" content="#eaf2dc">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Fårene hjem">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- a sheep seen from above-front, 100×100; wool takes its colour from --wool -->
+      <symbol id="sheep" viewBox="0 0 100 100">
+        <ellipse cx="50" cy="90" rx="30" ry="6" fill="rgba(40,60,20,.22)"/>
+        <rect x="30" y="72" width="8" height="16" rx="4" fill="#3b302b"/>
+        <rect x="62" y="72" width="8" height="16" rx="4" fill="#3b302b"/>
+        <g fill="var(--wool)" stroke="var(--wool-edge)" stroke-width="3">
+          <circle cx="30" cy="50" r="16"/><circle cx="50" cy="40" r="18"/><circle cx="70" cy="50" r="16"/>
+          <circle cx="36" cy="66" r="15"/><circle cx="64" cy="66" r="15"/><circle cx="50" cy="62" r="18"/>
+        </g>
+        <ellipse cx="50" cy="56" rx="26" ry="20" fill="var(--wool)"/>
+        <g class="head">
+          <ellipse cx="32" cy="30" rx="9" ry="5" fill="#3b302b" transform="rotate(-25 32 30)"/>
+          <ellipse cx="68" cy="30" rx="9" ry="5" fill="#3b302b" transform="rotate(25 68 30)"/>
+          <ellipse cx="50" cy="34" rx="14" ry="16" fill="#4a3c35"/>
+          <circle cx="44" cy="31" r="3" fill="#fff"/><circle cx="56" cy="31" r="3" fill="#fff"/>
+          <circle cx="44.6" cy="31.6" r="1.6" fill="#1d1714"/><circle cx="56.6" cy="31.6" r="1.6" fill="#1d1714"/>
+          <ellipse cx="50" cy="42" rx="5" ry="3" fill="#2d2420"/>
+          <circle cx="40" cy="38" r="2.6" fill="#f2a0a0" opacity=".8"/><circle cx="60" cy="38" r="2.6" fill="#f2a0a0" opacity=".8"/>
+        </g>
+      </symbol>
+      <symbol id="hedge" viewBox="0 0 100 100">
+        <ellipse cx="50" cy="88" rx="40" ry="8" fill="rgba(30,50,15,.25)"/>
+        <g fill="var(--hedge)" stroke="var(--hedge-edge)" stroke-width="3">
+          <circle cx="30" cy="58" r="22"/><circle cx="70" cy="58" r="22"/><circle cx="50" cy="40" r="26"/><circle cx="50" cy="66" r="22"/>
+        </g>
+        <g fill="var(--hedge-hi)"><circle cx="42" cy="32" r="6"/><circle cx="26" cy="52" r="4"/><circle cx="64" cy="50" r="4"/></g>
+        <g fill="#f7f3e8"><circle cx="62" cy="34" r="2.5"/><circle cx="34" cy="68" r="2.5"/><circle cx="72" cy="68" r="2.5"/></g>
+      </symbol>
+      <symbol id="stone" viewBox="0 0 100 100">
+        <ellipse cx="50" cy="84" rx="38" ry="8" fill="rgba(30,50,15,.25)"/>
+        <path d="M16 74 C10 52 24 26 48 24 C72 22 90 42 86 66 C84 80 70 84 50 84 C30 84 19 82 16 74Z" fill="var(--stone)" stroke="var(--stone-edge)" stroke-width="3"/>
+        <path d="M30 44 C36 34 48 32 56 34" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="4" stroke-linecap="round"/>
+        <g fill="var(--hedge)"><circle cx="70" cy="80" r="5"/><circle cx="78" cy="76" r="4"/></g>
+      </symbol>
+      <symbol id="tree" viewBox="0 0 100 100">
+        <ellipse cx="50" cy="88" rx="30" ry="7" fill="rgba(30,50,15,.25)"/>
+        <rect x="44" y="60" width="12" height="26" rx="4" fill="#7a5233"/>
+        <g fill="var(--hedge)" stroke="var(--hedge-edge)" stroke-width="3"><circle cx="50" cy="40" r="30"/></g>
+        <g fill="#e2725b"><circle cx="38" cy="34" r="5"/><circle cx="60" cy="28" r="5"/><circle cx="58" cy="50" r="5"/><circle cx="40" cy="52" r="4"/></g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div id="app">
+    <header class="hud">
+      <div class="stat"><span class="lbl">Bane</span><span class="val" id="levelNo">1</span></div>
+      <div class="stat"><span class="lbl">Får hjemme</span><span class="val" id="home">0/0</span></div>
+      <div class="stat"><span class="lbl">Træk</span><span class="val" id="moves">0</span></div>
+    </header>
+
+    <main id="play">
+      <div id="board" class="board" aria-label="Engen"></div>
+
+      <nav class="tools">
+        <button id="undoBtn" type="button" disabled>
+          <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          <span>Fortryd</span>
+        </button>
+        <button id="restartBtn" type="button">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>Forfra</span>
+        </button>
+        <button id="hintBtn" type="button">
+          <svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>
+          <span>Tip</span>
+        </button>
+        <button id="levelsBtn" type="button">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+          <span>Baner</span>
+        </button>
+        <button id="menuBtn" type="button">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <span>Menu</span>
+        </button>
+      </nav>
+    </main>
+  </div>
+
+  <div id="install">
+    <p>Installer spillet: tryk på
+      <svg viewBox="0 0 24 24" aria-label="Del"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"/></svg>
+      og vælg <b>Føj til hjemmeskærm</b>.</p>
+    <button type="button" aria-label="Luk">✕</button>
+  </div>
+
+  <div id="backdrop" class="backdrop"></div>
+
+  <section id="menu" class="sheet" aria-label="Menu">
+    <div class="grabber"></div>
+    <header class="sheet-head">
+      <h2>Fårene hjem</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Luk">✕</button>
+    </header>
+
+    <h3>Statistik</h3>
+    <div class="stats" id="statsBox"></div>
+
+    <h3>Indstillinger</h3>
+    <div class="group list">
+      <label class="toggle"><span>Lyd</span><input type="checkbox" id="optSound"><i></i></label>
+      <label class="toggle"><span>Vis symboler på farverne</span><input type="checkbox" id="optSymbols"><i></i></label>
+      <div class="pick"><span>Tema</span><div class="seg small" id="themeSeg">
+        <button type="button" data-v="auto">Auto</button>
+        <button type="button" data-v="light">Lys</button>
+        <button type="button" data-v="dark">Mørk</button>
+      </div></div>
+    </div>
+
+    <p class="foot">Bane nr. <span id="seedNo"></span> · <button type="button" class="link" id="mReset">Nulstil statistik</button></p>
+    <p class="foot"><a href="privacy.html" class="link">Privatlivspolitik</a></p>
+  </section>
+
+  <section id="levels" class="sheet" aria-label="Baner">
+    <div class="grabber"></div>
+    <header class="sheet-head">
+      <h2>Baner</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Luk">✕</button>
+    </header>
+    <p class="sheet-sub" id="levelsInfo"></p>
+    <div class="level-grid" id="levelGrid"></div>
+  </section>
+
+  <div id="confirmModal" class="modal">
+    <div class="panel">
+      <h3>Skift bane?</h3>
+      <p>Banen, du er i gang med, starter forfra næste gang.</p>
+      <div class="row">
+        <button type="button" class="secondary" data-act="cancel">Spil videre</button>
+        <button type="button" class="primary" data-act="ok">Skift bane</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="winModal" class="modal">
+    <div class="panel win">
+      <div class="win-sheep" aria-hidden="true">
+        <svg style="--wool:#fffaf0;--wool-edge:#d9cfbd"><use href="#sheep"/></svg>
+        <svg style="--wool:#fffaf0;--wool-edge:#d9cfbd"><use href="#sheep"/></svg>
+        <svg style="--wool:#fffaf0;--wool-edge:#d9cfbd"><use href="#sheep"/></svg>
+      </div>
+      <h2>Alle får er hjemme!</h2>
+      <p class="sub" id="wSub">Bane 1 klaret</p>
+      <div class="stats three">
+        <div><b id="wMoves">0</b><span>Træk</span></div>
+        <div><b id="wBest">0</b><span>Bedste</span></div>
+        <div><b id="wSheep">0</b><span>Får i alt</span></div>
+      </div>
+      <div id="wBadges" class="badges"></div>
+      <button type="button" class="primary wide" id="wNext">Næste bane</button>
+      <button type="button" class="link" id="wHome">Til forsiden</button>
+    </div>
+  </div>
+
+  <section id="intro" class="intro" aria-label="Startskærm">
+    <div class="intro-inner">
+      <div class="intro-art" aria-hidden="true">
+        <div class="intro-pen"></div>
+        <svg class="s1" style="--wool:#f6c1cf;--wool-edge:#c97f93"><use href="#sheep"/></svg>
+        <svg class="s2" style="--wool:#fffaf0;--wool-edge:#d9cfbd"><use href="#sheep"/></svg>
+        <svg class="s3" style="--wool:#bcd6f5;--wool-edge:#7c9fcb"><use href="#sheep"/></svg>
+      </div>
+      <h1>Bring the Sheep Home</h1>
+      <p class="tagline">Få fårene hjem – i dit eget tempo</p>
+
+      <div class="intro-actions">
+        <button type="button" class="primary wide" id="iPlay">Spil bane 1</button>
+        <button type="button" class="secondary wide" id="iLevels">Vælg bane</button>
+        <button type="button" class="link" id="iRules">Sådan spiller du</button>
+      </div>
+
+      <div class="intro-rules" id="introRules" hidden>
+        <ul>
+          <li>Fårene skal hjem i <b>folden med samme farve</b>.</li>
+          <li><b>Træk en fold</b> med fingeren. Kører den hen over et får i sin egen farve, går fåret ind.</li>
+          <li>Får i andre farver, hække og andre folde står i vejen.</li>
+          <li>Når alle får i en farve er hjemme, lukker folden og <b>giver plads</b> til de andre.</li>
+          <li>Der er ingen tidsgrænse, og du kan aldrig sidde helt fast. <b>Fortryd</b> og <b>Tip</b> hjælper dig videre.</li>
+        </ul>
+      </div>
+
+      <p class="intro-foot" id="introStats"></p>
+
+      <div class="publisher">
+        <svg class="pub-logo" viewBox="-80 -106 160 172" aria-hidden="true">
+          <g class="steam" fill="none" stroke="#E2725B" stroke-width="6" stroke-linecap="round">
+            <path d="M-6 -42 C-6 -54 -30 -60 -30 -79 C-30 -94 -13 -99 0 -85"/>
+            <path d="M6 -42 C6 -54 30 -60 30 -79 C30 -94 13 -99 0 -85"/>
+          </g>
+          <ellipse cx="0" cy="54" rx="62" ry="8" fill="#FBF6EE" stroke="#2B2522" stroke-width="3"/>
+          <path d="M42 -14 C72 -14 72 30 38 31" fill="none" stroke="#2B2522" stroke-width="13" stroke-linecap="round"/>
+          <path d="M42 -14 C72 -14 72 30 38 31" fill="none" stroke="#FBF6EE" stroke-width="6.5" stroke-linecap="round"/>
+          <path d="M-44 -30 L44 -30 L40 34 Q38 51 20 51 L-20 51 Q-38 51 -40 34 Z" fill="#FBF6EE" stroke="#2B2522" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M-42.4 14 L42.4 14 L41.9 22 L-41.9 22 Z" fill="#E2725B"/>
+          <ellipse cx="0" cy="-30" rx="44" ry="8" fill="#FBF6EE" stroke="#2B2522" stroke-width="3"/>
+          <ellipse cx="0" cy="-29" rx="37" ry="5" fill="#6F4A35"/>
+          <g fill="none" stroke="#2B2522" stroke-width="3.5" stroke-linecap="round">
+            <path d="M-20 -4 Q-14 -11 -8 -4"/>
+            <path d="M8 -4 Q14 -11 20 -4"/>
+            <path d="M-8 3 Q0 10 8 3"/>
+          </g>
+          <circle cx="-26" cy="4" r="5" fill="#F2A0A0"/>
+          <circle cx="26" cy="4" r="5" fill="#F2A0A0"/>
+        </svg>
+        <span>et spil fra<b>Trippus Games</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Placeholder for a full-screen ad between levels (AdMob interstitial later) -->
+  <div id="adInterstitial" class="ad-layer" role="dialog" aria-label="Reklame">
+    <div class="ad-top">
+      <span class="ad-tag">Reklame</span>
+      <button type="button" class="ad-close" aria-label="Luk reklamen" disabled><span class="ad-count">5</span></button>
+    </div>
+    <div class="ad-box">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 15 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg>
+      <b>Reklameplads</b>
+      <span>Her vises en fuldskærmsreklame (AdMob) mellem to baner – højst én hvert 3. minut.</span>
+    </div>
+  </div>
+
+  <!-- Placeholder for a bottom banner while the victory screen shows (AdMob banner later) -->
+  <div id="adBanner" class="ad-banner" aria-label="Reklame">
+    <span class="ad-tag">Reklame</span>
+    <span>Bannerreklame (AdMob)</span>
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

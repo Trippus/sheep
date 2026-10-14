@@ -1,0 +1,17 @@
+{
+  "name": "trippus-sheep",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bring the Sheep Home by Trippus Games - web app and Android app",
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "levels": "node tools/make-levels.mjs",
+    "test": "node --test \"tests/unit/*.test.mjs\"",
+    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.e2e.mjs\"",
+    "test:all": "npm test && npm run test:e2e",
+    "icons": "node tools/make-icons.mjs",
+    "shots": "node tools/store-shots.mjs",
+    "check-listing": "node tools/check-listing.mjs"
+  }
+}
