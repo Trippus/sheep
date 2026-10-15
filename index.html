@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
   <title>Bring the Sheep Home</title>
-  <meta name="description" content="Rolig puslespil: skub foldene hen til fårene i samme farve og få alle får hjem. Ingen tidsgrænse.">
+  <meta name="description" content="Puslespil: få foldene forbi hinanden og fårene hjem i den rigtige farve. Ingen tidsgrænse.">
   <meta name="theme-color" content="#eaf2dc">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -65,7 +65,7 @@
     <header class="hud">
       <div class="stat"><span class="lbl">Bane</span><span class="val" id="levelNo">1</span></div>
       <div class="stat"><span class="lbl">Får hjemme</span><span class="val" id="home">0/0</span></div>
-      <div class="stat"><span class="lbl">Træk</span><span class="val" id="moves">0</span></div>
+      <div class="stat"><span class="lbl">Træk</span><span class="val"><span id="moves">0</span><small> / <span id="par">0</span>★</small></span></div>
     </header>
 
     <main id="play">
@@ -160,13 +160,15 @@
       </div>
       <h2>Alle får er hjemme!</h2>
       <p class="sub" id="wSub">Bane 1 klaret</p>
+      <div class="stars" id="wStars">★★★</div>
       <div class="stats three">
         <div><b id="wMoves">0</b><span>Træk</span></div>
-        <div><b id="wBest">0</b><span>Bedste</span></div>
-        <div><b id="wSheep">0</b><span>Får i alt</span></div>
+        <div><b id="wPar">0</b><span>Til ★★★</span></div>
+        <div><b id="wBest">0</b><span>Din bedste</span></div>
       </div>
       <div id="wBadges" class="badges"></div>
       <button type="button" class="primary wide" id="wNext">Næste bane</button>
+      <button type="button" class="secondary wide" id="wRetry">Prøv igen</button>
       <button type="button" class="link" id="wHome">Til forsiden</button>
     </div>
   </div>
@@ -190,11 +192,12 @@
 
       <div class="intro-rules" id="introRules" hidden>
         <ul>
-          <li>Fårene skal hjem i <b>folden med samme farve</b>.</li>
-          <li><b>Træk en fold</b> med fingeren. Kører den hen over et får i sin egen farve, går fåret ind.</li>
-          <li>Får i andre farver, hække og andre folde står i vejen.</li>
-          <li>Når alle får i en farve er hjemme, lukker folden og <b>giver plads</b> til de andre.</li>
-          <li>Der er ingen tidsgrænse, og du kan aldrig sidde helt fast. <b>Fortryd</b> og <b>Tip</b> hjælper dig videre.</li>
+          <li>Fårene skal hjem i <b>folden med samme farve</b>. Træk en fold med fingeren.</li>
+          <li>Kører folden hen over et får i sin farve, går fåret ind. Får i andre farver og andre folde står i vejen.</li>
+          <li>Langs kanten venter får i <b>læskure</b>. Står folden ved kanten ud for et læskur, går de forreste får i dens farve ind. Fårene længere inde i skuret kan du kun lige skimte.</li>
+          <li>Tallet på folden er, hvor mange får der er plads til. Nogle folde <b>skifter farve</b>, når de er fulde, i stedet for at lukke.</li>
+          <li>En fold med 🔒 er <b>låst</b>, indtil alle får med 🔑 er hjemme.</li>
+          <li>Klar banen på så få træk som muligt for at få <b>★★★</b>. Der er ingen tidsgrænse, og <b>Fortryd</b> og <b>Tip</b> hjælper dig, hvis du kører fast.</li>
         </ul>
       </div>
 

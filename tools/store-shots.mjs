@@ -29,26 +29,28 @@ const play = (level, upTo) => `
   A.startLevel(${level});
   ${wait(1400)}
   const g = A.state;
-  const steps = S.solve(S.clone(g.st), { maxStates: 2000000 }).steps;
+  const steps = S.search(A.level, S.clone(g.s), { maxStates: 300000 }).steps;
   const drags = [];
   for (const s of steps) {
     if (!drags.length || drags[drags.length - 1][0][0] !== s[0]) drags.push([]);
     drags[drags.length - 1].push(s);
   }
   const k = ${upTo === 'last' ? 'drags.length' : `Math.max(1, Math.round(drags.length * ${upTo}))`};
-  for (const d of drags.slice(0, k - 1)) for (const [i, dx, dy] of d) S.step(g.st, i, dx, dy);
+  for (const d of drags.slice(0, k - 1)) for (const [i, dx, dy] of d) S.step(A.level, g.s, i, dx, dy);
   g.moves = k - 1;
   g.started = true;
   A.state = g;
   ${wait(300)}
   const board = document.querySelector('#board');
   const b = board.getBoundingClientRect();
-  const cs = parseFloat(getComputedStyle(board).getPropertyValue('--cs'));
+  const cs = parseFloat(board.style.getPropertyValue('--cs'));
+  const off = 8 + cs; // the rim plus the row of queue fields
   const d = drags[k - 1];
-  const pen = g.st.pens[d[0][0]];
-  let x = pen.x, y = pen.y;
-  const at = (x, y) => ({ clientX: b.left + 8 + (x + 0.5) * cs, clientY: b.top + 8 + (y + 0.5) * cs, pointerId: 1, bubbles: true });
-  document.querySelector('.pen[data-i="' + d[0][0] + '"]').dispatchEvent(new PointerEvent('pointerdown', at(x, y)));
+  const i = d[0][0];
+  const [cx, cy] = A.level.pens[i].cells[0];
+  let x = g.s.x[i], y = g.s.y[i];
+  const at = (x, y) => ({ clientX: b.left + off + (x + cx + 0.5) * cs, clientY: b.top + off + (y + cy + 0.5) * cs, pointerId: 1, bubbles: true });
+  document.querySelectorAll('.pen')[i].querySelector('.cell').dispatchEvent(new PointerEvent('pointerdown', at(x, y)));
   for (const [, dx, dy] of d) {
     x += dx; y += dy;
     window.dispatchEvent(new PointerEvent('pointermove', at(x, y)));
@@ -87,7 +89,7 @@ await withEdge(async (page) => {
     // Start every shot from a clean slate (optionally with a saved player). The storage is
     // prepared on a page without the game, so the game can't save over it on unload.
     await page.open(BASE + 'privacy.html', shot.view);
-    const seed = shot.storage ? `localStorage.setItem('sheep.v1', ${JSON.stringify(shot.storage)});` : '';
+    const seed = shot.storage ? `localStorage.setItem('sheep.v2', ${JSON.stringify(shot.storage)});` : '';
     await page.eval(`localStorage.clear(); ${seed}`);
     await page.open(shot.url, shot.view);
     await page.eval(shot.setup);

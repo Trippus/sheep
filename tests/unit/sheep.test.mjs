@@ -4,160 +4,186 @@ import assert from 'node:assert/strict';
 import * as S from '../../js/sheep.js';
 import { LEVELS } from '../../js/levels.js';
 
-// A small meadow written as rows; pens as [colour, x, y, w, h].
-const meadow = (rows, pens) => S.parseLevel({ w: rows[0].length, h: rows.length, g: rows.join(''), p: pens });
-
-// Plays a list of [pen, dx, dy] steps and fails if one is not allowed.
-function play(st, steps) {
-  for (const [i, dx, dy] of steps) assert.ok(S.step(st, i, dx, dy), `step ${i} ${dx},${dy} allowed`);
-  return st;
+// A small meadow written as rows, with queues and pens in the level format.
+function meadow(rows, pens, queues = []) {
+  const L = S.parseLevel({ w: rows[0].length, h: rows.length, g: rows.join(''), q: queues, p: pens });
+  return { L, s: S.startState(L) };
+}
+// Plays [pen, dx, dy] steps and fails if one is not allowed.
+function play(L, s, steps) {
+  for (const [i, dx, dy] of steps) assert.ok(S.step(L, s, i, dx, dy), `step ${i} ${dx},${dy} allowed`);
+  return s;
 }
 
-test('parseLevel counts sheep per pen, and encodeLevel gives the level back', () => {
-  const L = { w: 3, h: 2, g: '.a#b.a', p: [[0, 0, 0, 1, 1], [1, 2, 1, 1, 1]] };
-  const st = S.parseLevel(L);
-  assert.deepEqual(st.pens.map((p) => p.need), [2, 1]);
-  assert.equal(S.sheepTotal(st), 3);
-  assert.deepEqual(S.encodeLevel(st), L);
+test('shapes come in every rotation and mirror image', () => {
+  const counts = Object.fromEntries(Object.entries(S.SHAPES).map(([k, v]) => [k, v.length]));
+  assert.deepEqual(counts, { one: 1, two: 2, three: 2, corner: 4, square: 1, four: 2, L: 8, T: 4, S: 4 });
 });
 
-test('a pen catches sheep of its own colour', () => {
-  const st = meadow(['.a.'], [[0, 0, 0, 1, 1]]);
-  const r = S.step(st, 0, 1, 0);
-  assert.deepEqual(r, { caught: [1], closed: true });
-  assert.equal(st.cells[1], S.EMPTY);
-  assert.equal(st.pens[0].done, true);
-  assert.equal(S.isWon(st), true);
+test('parseLevel reads sheep, keys, queues, stages and locks', () => {
+  const { L } = meadow(['.aB', '...'], [['00 10', 0, 1, 'a1b2', 0], ['00', 2, 1, 'c2', 1]], [[2, 0, 'n', 'Cc']]);
+  assert.equal(L.sheep.length, 2);
+  assert.equal(L.sheep[1].key, true);
+  assert.deepEqual(L.pens[0].stages, [[0, 1], [1, 2]]);
+  assert.equal(L.pens[1].lock, true);
+  assert.equal(L.keys, 2);
+  assert.equal(S.sheepTotal(L), 4);
+  assert.deepEqual(L.anchors[2], [0]);
 });
 
-test('edges, hedges, other pens and sheep of other colours stop a pen', () => {
-  const st = meadow(['.#.', '.b.', '...'], [[0, 0, 0, 1, 1], [1, 2, 2, 1, 1], [2, 0, 2, 1, 1]]);
-  st.pens[2].need = 1; // keep pen 2 on the meadow even though it has no sheep here
-  st.pens[0].need = 1;
-  assert.equal(S.blocked(st, 0, -1, 0), 'edge');
-  assert.equal(S.blocked(st, 0, 1, 0), 'hedge');
-  assert.equal(S.blocked(st, 0, 0, 1), '');
-  play(st, [[0, 0, 1]]);
-  assert.equal(S.blocked(st, 0, 1, 0), 'sheep');
-  assert.equal(S.blocked(st, 0, 0, 1), 'pen');
-  assert.equal(S.step(st, 0, 1, 0), null, 'a blocked step changes nothing');
-  assert.deepEqual([st.pens[0].x, st.pens[0].y], [0, 1]);
+test('a pen brings sheep of its colour home and closes when full', () => {
+  const { L, s } = meadow(['.aa'], [['00', 0, 0, 'a2', 0]]);
+  const ev = S.step(L, s, 0, 1, 0);
+  assert.deepEqual(ev.caught, [0]);
+  assert.equal(S.room(L, s, 0), 1);
+  const ev2 = S.step(L, s, 0, 1, 0);
+  assert.equal(ev2.closed, true);
+  assert.equal(S.isWon(s), true);
 });
 
-test('a big pen catches every sheep it covers, and only counts what is left', () => {
-  const st = meadow(['...', 'aa.', 'a..'], [[0, 0, 0, 2, 1]]);
-  assert.equal(st.pens[0].need, 3);
-  const r = S.step(st, 0, 0, 1);
-  assert.deepEqual(r.caught, [3, 4]);
-  assert.equal(r.closed, false);
-  assert.equal(st.pens[0].need - st.pens[0].home, 1);
-  play(st, [[0, 0, 1]]);
-  assert.equal(S.isWon(st), true);
+test('edges, other pens, other colours and a full pen stop a move', () => {
+  const { L, s } = meadow(['.b.', '...', 'aa.'], [['00', 0, 0, 'a1b1', 0], ['00', 2, 1, 'b1', 0], ['00 10', 0, 1, 'a2', 0]]);
+  assert.equal(S.blocked(L, s, 0, -1, 0), 'edge');
+  assert.equal(S.blocked(L, s, 0, 1, 0), 'sheep');
+  assert.equal(S.blocked(L, s, 0, 0, 1), 'pen');
+  assert.equal(S.blocked(L, s, 2, 0, 1), '', 'two sheep, room for two');
+  const u = meadow(['..', 'aa'], [['00 10', 0, 0, 'a1a1', 0]]);
+  assert.equal(S.blocked(u.L, u.s, 0, 0, 1), 'full', 'two sheep but room for one');
+  assert.equal(S.step(u.L, u.s, 0, 0, 1), null, 'a blocked step changes nothing');
+  assert.deepEqual([u.s.x[0], u.s.y[0]], [0, 0]);
 });
 
-test('a closed pen leaves the meadow and makes room', () => {
-  // the blue pen is boxed in until the pink pen has fetched its sheep and closed
-  const st = meadow(['b#', '.a', '#.'], [[0, 0, 1, 1, 1], [1, 1, 2, 1, 1]]);
-  assert.equal(S.blocked(st, 1, 0, -1), 'sheep');
-  play(st, [[0, 1, 0]]);
-  assert.equal(st.pens[0].done, true);
-  assert.equal(S.penAt(st, 1, 1), -1);
-  play(st, [[1, 0, -1], [1, -1, 0], [1, 0, -1]]);
-  assert.equal(S.isWon(st), true);
+test('a pen at a queue takes the front sheep of its colour, as many as there is room for', () => {
+  const { L, s } = meadow(['..', '..'], [['00', 0, 1, 'a2', 0]], [[0, 0, 'n', 'aaab']]);
+  const ev = S.step(L, s, 0, 0, -1);
+  assert.deepEqual(ev.fromQueue, [0, 0]);
+  assert.equal(ev.closed, true);
+  assert.equal(s.qh[0], 2, 'the third pink sheep waits for another pen');
 });
 
-test('the solver finds the fewest drags, and its steps really win', () => {
-  const L = meadow(['b#', '.a', '#.'], [[0, 0, 1, 1, 1], [1, 1, 2, 1, 1]]);
-  const sol = S.solve(S.clone(L));
+test('a queue stops at a sheep of another colour', () => {
+  const { L, s } = meadow(['..', '..'], [['00', 1, 1, 'a3', 0]], [[1, 0, 'e', 'aba']]);
+  S.step(L, s, 0, 0, -1);
+  assert.equal(s.qh[0], 1);
+  assert.equal(S.room(L, s, 0), 2);
+});
+
+test('a pen turns to its next colour and goes on taking from the queue', () => {
+  const { L, s } = meadow(['..', '..'], [['00', 0, 1, 'a1b2', 0]], [[0, 0, 'w', 'abbb']]);
+  const ev = S.step(L, s, 0, 0, -1);
+  assert.deepEqual(ev.turned, [1]);
+  assert.equal(ev.closed, true);
+  assert.equal(s.qh[0], 3);
+});
+
+test('a locked pen cannot move until every sheep with a key is home', () => {
+  const { L, s } = meadow(['.A', '..'], [['00', 0, 0, 'a1', 0], ['00', 0, 1, 'b1', 1]], [[1, 1, 'e', 'b']]);
+  assert.equal(S.isLocked(L, s, 1), true);
+  assert.equal(S.blocked(L, s, 1, 1, 0), 'locked');
+  const ev = S.step(L, s, 0, 1, 0);
+  assert.equal(ev.unlocked, true);
+  assert.equal(S.isLocked(L, s, 1), false);
+  play(L, s, [[1, 1, 0]]);
+  assert.equal(S.isWon(s), true);
+});
+
+test('a closed pen leaves and makes room', () => {
+  const { L, s } = meadow(['.a.', '..b'], [['00', 0, 0, 'a1', 0], ['00', 0, 1, 'b1', 0]]);
+  assert.equal(S.blocked(L, s, 1, 0, -1), 'pen');
+  play(L, s, [[0, 1, 0]]);
+  assert.equal(s.done[0], true);
+  assert.equal(S.penGrid(L, s)[1], -1, 'the cell is free again');
+  assert.equal(S.blocked(L, s, 1, 0, -1), '');
+});
+
+test('the exact solver finds the fewest drags, and its steps really win', () => {
+  // the blue pen is boxed in until pink has fetched its sheep and closed
+  const { L, s } = meadow(['.a.', 'b..'], [['00', 0, 0, 'a1', 0], ['00 10', 1, 1, 'b1', 0]]);
+  const sol = S.solve(L, s);
   assert.equal(sol.drags, 2);
-  assert.equal(S.isWon(play(S.clone(L), sol.steps)), true);
-  const fast = S.solve(S.clone(L), { mode: 'steps' });
-  assert.equal(fast.steps.length, 4);
+  assert.equal(S.isWon(play(L, S.clone(s), sol.steps)), true);
+  const quick = S.search(L, s);
+  assert.equal(S.isWon(play(L, S.clone(s), quick.steps)), true);
+  assert.ok(quick.drags >= sol.drags);
 });
 
-test('the solver says null when there is no way home', () => {
-  const st = meadow(['.#a'], [[0, 0, 0, 1, 1]]);
-  assert.equal(S.solve(st), null);
+test('solver and search say "no way" when there is none', () => {
+  // pink can never pass the blue sheep, and blue has no pen
+  const { L, s } = meadow(['.ba'], [['00', 0, 0, 'a1', 0]]);
+  const info = {};
+  assert.equal(S.solve(L, s, { info }), null);
+  assert.equal(info.why, 'no way');
+  const info2 = {};
+  assert.equal(S.search(L, s, { info: info2 }), null);
+  assert.equal(info2.why, 'no way');
 });
 
-test('buildLevel: the same seed gives the same meadow (F11)', () => {
-  const spec = { w: 6, h: 7, pens: 4, shapes: [0, 1, 2, 3, 4, 5], drags: [1, 2], walk: [2, 5], sheep: [3, 5], hedge: 0.9 };
-  assert.deepEqual(S.encodeLevel(S.buildLevel(spec, 4242)), S.encodeLevel(S.buildLevel(spec, 4242)));
-  assert.notDeepEqual(S.encodeLevel(S.buildLevel(spec, 4242)), S.encodeLevel(S.buildLevel(spec, 4243)));
-});
-
-test('buildLevel always makes meadows that can be solved', () => {
-  const spec = { w: 5, h: 6, pens: 3, shapes: [0, 1, 2, 3], drags: [1, 2], walk: [2, 5], sheep: [3, 4], hedge: 0.8 };
-  for (let seed = 1; seed <= 20; seed++) {
-    const st = S.buildLevel(spec, seed);
-    assert.ok(S.solve(st, { maxStates: 2000000 }), `seed ${seed} can be solved`);
+test('buildLevel: the same seed gives the same meadow (F11), and built meadows can be solved', () => {
+  const spec = { w: 5, h: 6, pens: [4, 5], shapes: ['one', 'two', 'three', 'square', 'L', 'T'], perStage: [2, 4], twoStage: 0.3, lock: 0.5, drop: 0.12, toQueue: 0.85, queues: 40, shuffle: 30 };
+  let built = 0;
+  for (let seed = 1; built < 8 && seed < 500; seed++) {
+    const raw = S.buildLevel(spec, seed);
+    if (!raw) continue;
+    built++;
+    assert.deepEqual(S.buildLevel(spec, seed), raw);
+    const L = S.parseLevel(raw);
+    assert.ok(S.search(L, S.startState(L), { maxStates: 300000 }), `seed ${seed} can be solved`);
   }
+  assert.equal(built, 8);
 });
 
 test('every level is well formed', () => {
   assert.equal(LEVELS.length, 120);
-  LEVELS.forEach((L, n) => {
-    const st = S.parseLevel(L);
-    assert.equal(L.g.length, L.w * L.h, `level ${n + 1} grid size`);
-    assert.match(L.g, /^[.#a-f]+$/);
-    const colors = st.pens.map((p) => p.c);
-    assert.equal(new Set(colors).size, colors.length, `level ${n + 1}: one pen per colour`);
-    for (const v of st.cells) if (v >= 0) assert.ok(colors.includes(v), `level ${n + 1}: every sheep has a pen`);
-    st.pens.forEach((p, i) => {
-      assert.ok(p.need > 0, `level ${n + 1}: pen ${i} has sheep`);
-      for (let y = p.y; y < p.y + p.h; y++) {
-        for (let x = p.x; x < p.x + p.w; x++) {
-          assert.ok(x < st.w && y < st.h, `level ${n + 1}: pen inside the meadow`);
-          assert.equal(st.cells[y * st.w + x], S.EMPTY, `level ${n + 1}: pen stands on grass`);
-          assert.equal(S.penAt(st, x, y), i, `level ${n + 1}: pens do not overlap`);
-        }
-      }
-    });
+  LEVELS.forEach((raw, n) => {
+    const L = S.parseLevel(raw);
+    const s = S.startState(L);
+    assert.equal(raw.g.length, raw.w * raw.h, `level ${n + 1} grid size`);
+    assert.match(raw.g, /^[.a-fA-F]+$/);
+    // every sheep has a place in some pen: per colour, sheep = room in stages
+    const need = new Array(6).fill(0);
+    L.pens.forEach((p) => p.stages.forEach(([c, k]) => (need[c] += k)));
+    const have = new Array(6).fill(0);
+    L.sheep.forEach((sh) => have[sh.c]++);
+    L.queues.forEach((q) => q.sheep.forEach((sh) => have[sh.c]++));
+    assert.deepEqual(have, need, `level ${n + 1}: sheep match the pens`);
+    // pens inside, on grass, not overlapping
+    const seen = new Set();
+    L.pens.forEach((p, i) =>
+      S.penCells(L, s, i).forEach(([x, y]) => {
+        assert.ok(x >= 0 && y >= 0 && x < L.w && y < L.h, `level ${n + 1}: pen inside`);
+        assert.equal(L.sheepAt[y * L.w + x], -1, `level ${n + 1}: pen on grass`);
+        assert.ok(!seen.has(`${x},${y}`), `level ${n + 1}: pens do not overlap`);
+        seen.add(`${x},${y}`);
+      }),
+    );
+    assert.ok(!s.qh.some(Boolean) && !s.got.some(Boolean), `level ${n + 1}: nothing happens before the first move`);
+    assert.ok(raw.d >= L.pens.length - 1, `level ${n + 1}: par is set`);
   });
 });
 
-test('levels with a measured best are solved in exactly that many drags', () => {
-  LEVELS.forEach((L, n) => {
-    if (!L.d || L.w * L.h > 30) return; // keep the test quick: the small ones
-    const sol = S.solve(S.parseLevel(L), { maxStates: 400000 });
-    assert.equal(sol?.drags, L.d, `level ${n + 1}`);
+test('the first levels can be solved, in no more drags than their par', () => {
+  LEVELS.slice(0, 30).forEach((raw, n) => {
+    const L = S.parseLevel(raw);
+    const sol = S.search(L, S.startState(L), { maxStates: 300000 });
+    assert.ok(sol, `level ${n + 1} can be solved`);
+    assert.ok(sol.drags >= raw.d, `level ${n + 1}: par ${raw.d} is not beaten by the quick search`);
   });
 });
 
-test('levels get bigger as you go', () => {
-  const size = (L) => L.p.length;
-  assert.ok(size(LEVELS[0]) <= size(LEVELS[30]) && size(LEVELS[30]) <= size(LEVELS[119]));
+test('levels get bigger and bring in the rules one at a time', () => {
+  const pens = (n) => LEVELS[n].p.length;
+  assert.ok(pens(0) <= pens(30) && pens(30) <= pens(119));
+  assert.ok(LEVELS.slice(0, 5).every((l) => l.p.every((p) => p[4] === 0 && p[3].length <= 2)), 'first levels: no locks, one colour per pen');
+  assert.ok(LEVELS.slice(50).some((l) => l.p.some((p) => p[4])), 'later levels have locks');
+  assert.ok(LEVELS.slice(50).some((l) => l.p.some((p) => p[3].length > 2)), 'later levels have pens that change colour');
 });
 
-test('no dead ends: after random moves every small level can still be solved', () => {
-  const rnd = S.mulberry32(7);
-  LEVELS.slice(0, 30).forEach((L, n) => {
-    const st = S.parseLevel(L);
-    for (let k = 0; k < 40; k++) {
-      const i = Math.floor(rnd() * st.pens.length);
-      const [dx, dy] = S.DIRS[Math.floor(rnd() * 4)];
-      S.step(st, i, dx, dy);
-    }
-    assert.ok(S.isWon(st) || S.solve(st, { maxStates: 400000 }), `level ${n + 1} still solvable`);
-  });
-});
-
-test('hints are legal moves that bring a sheep closer to home', () => {
-  for (const n of [0, 5, 20, 50, 100]) {
-    const st = S.parseLevel(LEVELS[n]);
-    const h = S.firstDrag(S.solve(S.clone(st), { mode: 'steps', maxStates: 40000 })) || S.nearestCatch(st);
+test('the hint is a legal first drag of a way home', () => {
+  for (const n of [0, 10, 40, 80]) {
+    const L = S.parseLevel(LEVELS[n]);
+    const s = S.startState(L);
+    const h = S.firstDrag(S.search(L, S.clone(s), { maxStates: 60000 }));
     assert.ok(h, `level ${n + 1} has a hint`);
-    const before = S.sheepLeft(st);
-    play(st, h.steps.map(([dx, dy]) => [h.pen, dx, dy]));
-    assert.ok(S.sheepLeft(st) <= before);
+    play(L, s, h.steps.map(([dx, dy]) => [h.pen, dx, dy]));
   }
-});
-
-test('nearestCatch walks a pen to its closest sheep', () => {
-  const st = meadow(['....', '#..a', 'a...'], [[0, 0, 0, 1, 1]]);
-  const h = S.nearestCatch(st);
-  assert.equal(h.pen, 0);
-  assert.equal(h.steps.length, 4); // around the hedge, or along the top: both 4 steps
-  play(st, h.steps.map(([dx, dy]) => [0, dx, dy]));
-  assert.equal(S.sheepLeft(st), 1);
 });

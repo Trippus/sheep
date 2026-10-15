@@ -7,9 +7,9 @@ import { LEVELS } from '../../js/levels.js';
 
 // Example of the shape (not a real bug):
 // test('BUG-001: level 37 cannot be finished after closing the blue pen', () => {
-//   const st = S.parseLevel(LEVELS[36]);
+//   const L = S.parseLevel(LEVELS[36]);
 //   ...
-//   assert.ok(S.solve(st));
+//   assert.ok(S.search(L, S.startState(L)));
 // });
 
-test('regression suite loads', () => assert.ok(LEVELS.length && S.parseLevel(LEVELS[0])));
+test('regression suite loads', () => assert.ok(LEVELS.length && S.startState(S.parseLevel(LEVELS[0]))));

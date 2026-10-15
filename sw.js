@@ -1,7 +1,7 @@
 // Offline support. Online, every request goes to the network first so players
 // always get the latest version; the cached copy is only used when offline.
 // Bump VERSION when shipping changes so old caches are dropped.
-const VERSION = 'sheep-v1';
+const VERSION = 'sheep-v2';
 const ASSETS = [
   './',
   './index.html',

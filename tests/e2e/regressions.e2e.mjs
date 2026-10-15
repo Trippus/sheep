@@ -18,7 +18,7 @@ const run = (js) => g.page.eval(DOM + js);
 //     await startAt(4);
 //     $('#hintBtn').click(); await wait(2500);
 //     $('#undoBtn').click(); await wait(100);
-//     return A.S.sheepLeft(A.state.st) === A.S.sheepTotal(A.state.st);
+//     return A.S.sheepLeft(A.level, A.state.s) === A.S.sheepTotal(A.level);
 //   `);
 //   assert.equal(r, true);
 // });

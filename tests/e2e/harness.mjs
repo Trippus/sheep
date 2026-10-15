@@ -49,18 +49,23 @@ export const DOM = `
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const A = window.__sheep;
   const key = (k) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
-  const pens = () => A.state.st.pens;
-  // Drags pen i with pointer events, through the given cells [x, y] (top-left of the pen).
+  const st = () => A.state.s;
+  // waits until f() is true (or gives up after ms)
+  const until = async (f, ms = 12000) => { const t = Date.now(); while (!f() && Date.now() - t < ms) await wait(100); };
+  const winShown = () => until(() => $('#winModal').classList.contains('open'));
+  // Drags pen i with pointer events; cells are where its top-left goes, one step at a time.
+  // It grabs the pen by its first cell, just like a finger would.
   const dragPen = async (i, cells) => {
     const board = $('#board');
     const b = board.getBoundingClientRect();
-    const cs = parseFloat(getComputedStyle(board).getPropertyValue('--cs'));
-    const p = pens()[i];
-    const at = (x, y) => ({ clientX: b.left + 8 + (x + 0.5) * cs, clientY: b.top + 8 + (y + 0.5) * cs, pointerId: 1, bubbles: true });
-    document.querySelector('.pen[data-i="' + i + '"]').dispatchEvent(new PointerEvent('pointerdown', at(p.x, p.y)));
+    const cs = parseFloat(board.style.getPropertyValue('--cs'));
+    const off = 8 + cs;
+    const [cx, cy] = A.level.pens[i].cells[0];
+    const at = (x, y) => ({ clientX: b.left + off + (x + cx + 0.5) * cs, clientY: b.top + off + (y + cy + 0.5) * cs, pointerId: 1, bubbles: true });
+    document.querySelectorAll('.pen')[i].querySelector('.cell').dispatchEvent(new PointerEvent('pointerdown', at(st().x[i], st().y[i])));
     for (const [x, y] of cells) {
       window.dispatchEvent(new PointerEvent('pointermove', at(x, y)));
-      await wait(40);
+      await wait(30);
     }
     const [lx, ly] = cells[cells.length - 1];
     window.dispatchEvent(new PointerEvent('pointerup', at(lx, ly)));
@@ -71,7 +76,7 @@ export const DOM = `
     let k = 0;
     while (k < steps.length) {
       const i = steps[k][0];
-      let x = pens()[i].x, y = pens()[i].y;
+      let x = st().x[i], y = st().y[i];
       const cells = [];
       for (; k < steps.length && steps[k][0] === i; k++) {
         x += steps[k][1];
@@ -81,6 +86,11 @@ export const DOM = `
       await dragPen(i, cells);
     }
   };
-  const solveNow = () => A.S.solve(A.S.clone(A.state.st), { maxStates: 400000 }).steps;
+  const solveNow = () => A.S.search(A.level, A.S.clone(st()), { maxStates: 300000 }).steps;
+  // a pen and a direction it cannot go, and why
+  const findBlocked = (why) => {
+    for (let i = 0; i < A.level.pens.length; i++) for (const [dx, dy] of A.S.DIRS) if (A.S.blocked(A.level, st(), i, dx, dy) === why) return { i, dx, dy };
+    return null;
+  };
   const startAt = async (n) => { $('#iPlay').click(); await wait(300); A.startLevel(n); await wait(200); };
 `;
