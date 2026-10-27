@@ -9,34 +9,34 @@ Check the counts with `npm run check-listing`.
 Få fårene hjem – Puslespil
 
 ### Kort beskrivelse
-Roligt puslespil: træk foldene hen til fårene. Ingen tidsgrænse, ingen stress.
+Puslespil: få foldene forbi hinanden og fårene hjem. Ingen tidsgrænse.
 
 ### Fuld beskrivelse
-Få fårene hjem er et roligt og hyggeligt puslespil til din telefon. Fårene er løbet ud på engen, og du skal hjælpe dem hjem igen. Perfekt til kaffepausen, i toget eller i sofaen.
+Få fårene hjem er et hyggeligt puslespil, der kræver lidt omtanke. Engen er fuld af folde og får, og du skal få foldene forbi hinanden, så alle fårene kommer hjem. Perfekt til kaffepausen, i toget eller i sofaen.
 
-Træk de farvede folde hen over fårene i samme farve – når alle får i en farve er hjemme, lukker folden og giver plads til de andre.
+Træk de farvede folde hen over fårene i samme farve, og hent fårene, der venter i læskurene ved kanten. Hver fold har plads til et bestemt antal får – når den er fuld, lukker den og giver plads til de andre. Nogle folde skifter farve, og nogle er låst, indtil fårene med nøgler er hjemme.
 
 ✎ 120 baner
-• Fra den første lille eng med én fold til store enge med hække, sten og seks farver
-• Banerne bliver langsomt sværere, så du hele tiden lærer noget nyt
-• Hver bane er afprøvet, så den altid kan klares
-• Vend tilbage til en klaret bane, når du vil, og prøv at bruge færre træk
+• Fra en lille eng med tre folde til store, fyldte enge med op til tolv folde i former som L, T og S
+• Nye regler kommer én ad gangen: læskure, låse og folde, der skifter farve
+• Hver bane er løst på forhånd, så den altid kan klares
+• Få ★★★ ved at klare banen på så få træk som muligt
 
 ★ I dit eget tempo
 • Ingen tidsgrænse og ingen nedtælling
-• Du kan aldrig sidde fast: hvert træk kan gøres om
+• Kører du fast, kan hvert træk gøres om
 • Fortryd så mange træk, du vil, eller start banen forfra
 • Tip viser dig et godt næste træk, når du har brug for et puf
 
 ✓ Til glæde, ikke til straf
 • Dit bedste resultat på hver bane gemmes
 • Se hvor mange får du har talt hjem – en god søvn venter!
-• Mærker for "Uden tip" og "Færrest mulige træk"
+• Stjerner på hver bane og mærker for "Uden tip"
 
 ♥ Lavet med omtanke
 • Store, tydelige brikker og rolige farver
 • Hver farve har også sit eget symbol, så spillet er nemt at spille, selv om man er farveblind
-• Søde "mæh"-lyde, som kan slås fra
+• Bløde lyde, som kan slås fra
 • Lyst og mørkt tema
 • Spillet gemmes automatisk – fortsæt, hvor du slap
 • Virker uden internet og kræver ingen konto
@@ -52,34 +52,34 @@ Få fårene hjem er et spil fra Trippus Games.
 Bring the Sheep Home – Puzzle
 
 ### Short description
-A calm puzzle game: drag the pens to the sheep. No timer, no stress.
+A puzzle: get the pens past each other and the sheep home. No timer.
 
 ### Full description
-Bring the Sheep Home is a calm, cosy puzzle game for your phone. The sheep have wandered out across the meadow, and it's up to you to bring them home. Perfect for a coffee break, on the train or on the sofa.
+Bring the Sheep Home is a cosy puzzle game that takes a little thought. The meadow is full of pens and sheep, and you have to get the pens past each other so every sheep gets home. Perfect for a coffee break, on the train or on the sofa.
 
-Drag the coloured pens over the sheep of the same colour – when every sheep of a colour is home, the pen closes and makes room for the others.
+Drag the coloured pens over the sheep of the same colour, and fetch the sheep waiting in the shelters along the edge. Every pen holds a set number of sheep – when it is full, it closes and makes room for the others. Some pens change colour, and some are locked until the sheep with keys are home.
 
 ✎ 120 levels
-• From a small first meadow with a single pen to large meadows with hedges, stones and six colours
-• The levels get harder slowly, so there is always something new to learn
-• Every level has been tested, so it can always be solved
-• Go back to any solved level whenever you like and try to use fewer moves
+• From a small meadow with three pens to large, crowded meadows with up to twelve pens shaped like L, T and S
+• New rules arrive one at a time: shelters, locks and pens that change colour
+• Every level has been solved in advance, so it can always be done
+• Earn ★★★ by solving a level in as few moves as possible
 
 ★ At your own pace
 • No timer and no countdown
-• You can never get stuck: every move can be taken back
+• If you get stuck, every move can be taken back
 • Undo as many moves as you like, or restart the level
 • Hints show you a good next move when you need a nudge
 
 ✓ For fun, not for pressure
 • Your best result on every level is saved
 • See how many sheep you have counted home – a good night's sleep awaits!
-• Badges for "No hints" and "Fewest possible moves"
+• Stars on every level and badges for "No hints"
 
 ♥ Made with care
 • Big, clear pieces and calm colours
 • Every colour also has its own symbol, so the game is easy to play if you are colour-blind
-• Cute "baa" sounds that you can turn off
+• Soft sounds that you can turn off
 • Light and dark theme
 • Your game is saved automatically – carry on where you left off
 • Works offline and needs no account

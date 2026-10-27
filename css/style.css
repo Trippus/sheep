@@ -250,27 +250,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
   pointer-events: auto;
   cursor: grab;
 }
-.pen .cell::before {
-  content: "";
+.pen .shape {
   position: absolute;
-  inset: var(--t) var(--r) var(--b) var(--l);
-  background:
-    repeating-linear-gradient(90deg, transparent 0 calc(var(--cs) * .22), rgba(255, 255, 255, .25) 0 calc(var(--cs) * .26)),
-    color-mix(in srgb, var(--pen) 48%, #fff);
-  transition: filter .2s, box-shadow .2s;
+  left: 0;
+  top: 0;
+  width: calc(var(--bw) * var(--cs));
+  height: calc(var(--bh) * var(--cs));
+  overflow: visible;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 3px 4px rgba(40, 50, 10, .25));
+  transition: filter .2s;
 }
-.pen .cell.t { --t: 3px; }
-.pen .cell.r { --r: 3px; }
-.pen .cell.b { --b: 3px; }
-.pen .cell.l { --l: 3px; }
-.pen .cell.t::before { border-top: 4px solid var(--pen); }
-.pen .cell.r::before { border-right: 4px solid var(--pen); }
-.pen .cell.b::before { border-bottom: 4px solid var(--pen); }
-.pen .cell.l::before { border-left: 4px solid var(--pen); }
-.pen .cell.t.l::before { border-top-left-radius: 12px; }
-.pen .cell.t.r::before { border-top-right-radius: 12px; }
-.pen .cell.b.l::before { border-bottom-left-radius: 12px; }
-.pen .cell.b.r::before { border-bottom-right-radius: 12px; }
+.pen .shape .edge { fill: var(--pen); }
+.pen .shape .floor { fill: color-mix(in srgb, var(--pen) 45%, #fff); }
 .pen .tag {
   position: relative;
   display: flex;
@@ -299,25 +292,25 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .pen.locked .lock { display: block; }
 .pen.locked .cell { cursor: not-allowed; }
-.pen.locked .cell::before { filter: saturate(.35) brightness(.92); }
+.pen.locked .shape { filter: saturate(.3) brightness(.92); }
 .pen.unlock .lock { display: block; animation: unlock .7s forwards; }
 @keyframes unlock { 40% { transform: translateY(-30%) rotate(-15deg); } 100% { transform: translateY(-120%) rotate(-30deg); opacity: 0; } }
 .pen.grab { z-index: 4; }
-.pen.grab .cell::before { filter: brightness(1.06); box-shadow: 0 8px 18px rgba(40, 50, 10, .3); }
+.pen.grab .shape { filter: brightness(1.06) drop-shadow(0 8px 10px rgba(40, 50, 10, .35)); }
 .pen.bump { animation: bump .25s; }
 @keyframes bump { 40% { opacity: .75; } }
-.pen.hint .cell::before { animation: glow 1s ease-in-out 2; }
-@keyframes glow { 50% { filter: brightness(1.2); box-shadow: inset 0 0 0 4px var(--gold); } }
+.pen.hint .shape { animation: glow 1s ease-in-out 2; }
+@keyframes glow { 50% { filter: brightness(1.15) drop-shadow(0 0 6px var(--gold)) drop-shadow(0 0 3px var(--gold)); } }
 .pen.gulp .tag { animation: gulp .3s; }
 @keyframes gulp { 40% { transform: scale(1.3); } }
-.pen.flip .cell::before { animation: flip .5s ease-in-out; }
+.pen.flip .shape { animation: flip .5s ease-in-out; }
 @keyframes flip { 50% { transform: scaleX(.1); filter: brightness(1.3); } }
 /* closing: the tag cheers, then the tiles shrink away one after the other */
 .pen.closing { pointer-events: none; }
 .pen.closing .cell { pointer-events: none; }
 .pen.closing .tag { animation: cheer .9s forwards; }
 @keyframes cheer { 30% { transform: scale(1.4); } 100% { transform: scale(.2); opacity: 0; } }
-.pen.closing .cell::before { animation: dissolve .6s ease-in forwards; animation-delay: calc(250ms + var(--k) * 70ms); }
+.pen.closing .shape { animation: dissolve .65s ease-in .25s forwards; }
 @keyframes dissolve {
   30% { transform: scale(1.06); filter: brightness(1.3); }
   100% { transform: scale(.1) rotate(25deg); opacity: 0; }
@@ -802,5 +795,5 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .steam, .intro.open .intro-art svg, .modal.open .win-sheep svg, .baa, .board.deal .sheep > svg, .board.deal .queue .front, .board.won .meadow, .pen.unlock .lock { animation: none !important; }
-  .pen, .pen.closing .cell::before, .pen.closing .tag, .pen.flip .cell::before, .sheep.caught { transition-duration: 0s !important; animation-duration: .01s !important; }
+  .pen, .pen.closing .shape, .pen.closing .tag, .pen.flip .shape, .sheep.caught { transition-duration: 0s !important; animation-duration: .01s !important; }
 }

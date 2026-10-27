@@ -6,15 +6,15 @@ Det, de automatiske tests ikke kan mærke. Tag 10 minutter på en rigtig telefon
 ## Følelse og lyd
 - [ ] At trække en fold føles let: den følger fingeren uden forsinkelse, og siden ruller ikke med
 - [ ] Folden glider rundt om et hjørne, når man trækker skråt
-- [ ] "Mæh" lyder, når et får går hjem, og der spiller en lille fanfare, når folden lukker
+- [ ] En blød klokke lyder, når et får lander i folden, og der spiller en lille fanfare, når folden lukker
 - [ ] Lydene spiller efter første tryk (iPhone kræver et tryk først), og Lyd fra virker
 - [ ] Et får i en anden farve "rykker sig" og stopper folden, uden at det føles som en fejl
-- [ ] Fårene i køen hopper ind i folden ét ad gangen, og tallet tæller ned; man kan lige skimte de næste i køen
+- [ ] Fårene i læskuret hopper ind i folden ét ad gangen, og tallet tæller ned; man kan lige skimte de næste i skuret
 - [ ] Opløsningen af en fuld fold og et farveskift er tydelige; lås (🔒 / 🔑) er til at forstå uden at læse reglerne
 
 ## Skærm
 - [ ] Hele engen og alle fem knapper er synlige på en lille telefon (iPhone SE-størrelse)
-- [ ] Får, køer og folde er store nok til at ramme med en tommelfinger på de største baner (6×8)
+- [ ] Får, læskure og folde er store nok til at ramme med en tommelfinger på de største baner (7×8)
 - [ ] L-, T- og S-formede folde ligner én fold, ikke flere
 - [ ] Vandret på tablet: engen til venstre, knapper til højre
 - [ ] Mørkt tema: farverne og symbolerne er tydelige

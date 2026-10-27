@@ -302,7 +302,8 @@ export function solve(L, s0, { mode = 'drags', maxStates = 200000, info = {} } =
 // state with the fewest sheep left, then the fewest drags so far. Used where the exact solver
 // is too slow: to check that big levels can be solved, to set their par, and for hints.
 // Explores every reachable state before saying null, so null with info.why 'no way' is certain.
-export function search(L, s0, { maxStates = 300000, info = {} } = {}) {
+// A smaller weight cares more about few drags and less about speed, for a better par.
+export function search(L, s0, { maxStates = 300000, info = {}, weight = 1000 } = {}) {
   const states = [s0];
   const drags = [0];
   const last = [-1];
@@ -336,7 +337,7 @@ export function search(L, s0, { maxStates = 300000, info = {} } = {}) {
         last.push(t.done[i] ? -1 : i);
         parent.push(at);
         move.push([i, dx, dy]);
-        heap.push(states.length - 1, left(t) * 1000 + d);
+        heap.push(states.length - 1, left(t) * weight + d);
       }
     }
   }
@@ -551,7 +552,8 @@ export function buildLevel(spec, seed) {
           // going forward the pen takes the whole run of its colour at the front, so only
           // put sheep back if the sheep behind is another colour or the stage starts here
           if (!Q.sheep.length || Q.sheep[0] !== c || p.given === 0) {
-            const m = int(1, p.stages[p.stage][1] - p.given);
+            // mostly one sheep at a time, so the colours in a shelter end up well mixed
+            const m = rnd() < (spec.mix ?? 0) ? 1 : int(1, p.stages[p.stage][1] - p.given);
             for (let k = 0; k < m; k++) {
               Q.sheep.unshift(c);
               if (frozen) late.push(['q', Q]);
@@ -618,4 +620,35 @@ export function buildLevel(spec, seed) {
   const s0 = startState(L);
   if (s0.qh.some(Boolean) || s0.got.some(Boolean) || s0.stage.some(Boolean)) return null;
   return raw;
+}
+
+// Fills a built level up with extra sheep, one at a time on free cells, until `full` of the
+// meadow is pens or sheep. Each extra sheep gives a pen of its colour one more place, and is
+// only kept if the level can still be solved, so the meadow gets crowded but stays fair.
+export function fillLevel(raw, { full, seed, maxStates = 150000 }) {
+  const rnd = mulberry32(seed);
+  const N = raw.w * raw.h;
+  let cur = JSON.parse(JSON.stringify(raw));
+  const L0 = parseLevel(cur);
+  const s0 = startState(L0);
+  const covered = new Set();
+  L0.pens.forEach((p, i) => penCells(L0, s0, i).forEach(([x, y]) => covered.add(y * raw.w + x)));
+  const used = () => covered.size + [...cur.g].filter((ch) => ch !== '.').length;
+  const free = [...Array(N).keys()].filter((k) => !covered.has(k) && cur.g[k] === '.').sort(() => rnd() - 0.5);
+  for (const k of free) {
+    if (used() >= full * N) break;
+    const pi = Math.floor(rnd() * cur.p.length);
+    const stages = [...cur.p[pi][3].matchAll(/([a-f])(\d+)/g)].map((m) => [m[1], +m[2]]);
+    const si = Math.floor(rnd() * stages.length);
+    if (stages[si][1] >= 9) continue;
+    stages[si][1]++;
+    const next = JSON.parse(JSON.stringify(cur));
+    next.g = cur.g.slice(0, k) + stages[si][0] + cur.g.slice(k + 1);
+    next.p[pi][3] = stages.map(([c, n]) => c + n).join('');
+    const L = parseLevel(next);
+    const s = startState(L);
+    if (s.qh.some(Boolean) || s.got.some(Boolean)) continue;
+    if (search(L, s, { maxStates })) cur = next;
+  }
+  return cur;
 }

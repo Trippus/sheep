@@ -147,16 +147,22 @@ function build(deal = false) {
     el.className = 'piece pen';
     el.dataset.i = i;
     el.setAttribute('role', 'button');
-    const set = new Set(p.cells.map(([x, y]) => `${x},${y}`));
-    const has = (x, y) => set.has(`${x},${y}`);
     const [tx, ty] = tagCell(p);
-    el.innerHTML = p.cells
-      .map(([x, y], k) => {
-        const edges = [!has(x, y - 1) && 't', !has(x + 1, y) && 'r', !has(x, y + 1) && 'b', !has(x - 1, y) && 'l'].filter(Boolean).join(' ');
-        const tag = x === tx && y === ty ? '<span class="tag"><i></i><b></b></span><span class="lock">🔒︎</span>' : '';
-        return `<div class="cell ${edges}" style="--cx:${x};--cy:${y};--k:${k}">${tag}</div>`;
-      })
-      .join('');
+    // the outline is one shape for the whole pen (see #penEdge in index.html); the cells on
+    // top are just what a finger grabs, and one of them carries the tag
+    const bw = Math.max(...p.cells.map((c) => c[0])) + 1;
+    const bh = Math.max(...p.cells.map((c) => c[1])) + 1;
+    const rects = p.cells.map(([x, y]) => `<rect x="${x * 100 - 1}" y="${y * 100 - 1}" width="102" height="102"/>`).join('');
+    const shape = `<svg class="shape" viewBox="0 0 ${bw * 100} ${bh * 100}" style="--bw:${bw};--bh:${bh}">
+      <g class="edge" filter="url(#penEdge)">${rects}</g><g class="floor" filter="url(#penFill)">${rects}</g></svg>`;
+    el.innerHTML =
+      shape +
+      p.cells
+        .map(([x, y]) => {
+          const tag = x === tx && y === ty ? '<span class="tag"><i></i><b></b></span><span class="lock">🔒︎</span>' : '';
+          return `<div class="cell" style="--cx:${x};--cy:${y}">${tag}</div>`;
+        })
+        .join('');
     board.appendChild(el);
     return el;
   });
@@ -282,7 +288,7 @@ async function play(i, e, ep) {
     }
     if (ep !== epoch) return;
     v.n--;
-    Sound.play('baa', { pitch: 0.85 + Math.random() * 0.35, vol: 0.7 });
+    Sound.play('chime', { note: L.pens[i].stages[v.stage][1] - v.n - 1 });
     replay(pe, 'gulp');
     render();
     await wait(40);
@@ -474,10 +480,22 @@ function restart() {
 }
 
 // The next drag on a way home from here, or why there is none.
+// Each level carries a solution. While the meadow is somewhere on that path the hint simply
+// shows its next drag; otherwise it searches from here, which is fine on small meadows.
 function findHint() {
+  const sol = LEVELS[game.level].s;
+  if (sol) {
+    const steps = [...sol.matchAll(/([a-z])(\d)/g)].map((m) => [m[1].charCodeAt(0) - 97, ...S.DIRS[+m[2]]]);
+    const here = S.stateKey(game.s);
+    const t = S.startState(L);
+    for (let k = 0; k <= steps.length; k++) {
+      if (S.stateKey(t) === here) return S.firstDrag({ steps: steps.slice(k) });
+      if (k < steps.length) S.step(L, t, ...steps[k]);
+    }
+  }
   const info = {};
-  const sol = S.search(L, S.clone(game.s), { maxStates: 60000, info });
-  return sol ? S.firstDrag(sol) : { none: info.why };
+  const found = S.search(L, S.clone(game.s), { maxStates: 60000, info });
+  return found ? S.firstDrag(found) : { none: info.why };
 }
 
 async function hint() {
@@ -485,7 +503,11 @@ async function hint() {
   const h = findHint();
   if (h.none) {
     Sound.play('bump');
-    toast(h.none === 'no way' ? 'Herfra kan fårene ikke komme hjem. Fortryd et par træk, eller start forfra.' : 'Prøv at gøre plads, så foldene kan komme forbi hinanden.');
+    toast(
+      h.none === 'no way'
+        ? 'Herfra kan fårene ikke komme hjem. Fortryd et par træk, eller start forfra.'
+        : 'Tip kan ikke se vejen herfra. Fortryd nogle træk, eller start forfra – så kan Tip vise vejen hele vejen.',
+    );
     return;
   }
   busy = true;

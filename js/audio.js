@@ -3,6 +3,8 @@ let ctx = null;
 let master = null;
 let noise = null;
 
+const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19];
+
 export const Sound = {
   enabled: true,
 
@@ -43,9 +45,14 @@ export const Sound = {
         burst(t, 300, 0.8, 0.08, 0.25 * vol);
         tone(t, 160, 0.1, 0.1 * vol, 'sine', 110);
         break;
-      case 'baa':
-        baa(t, opt.pitch || 1, 0.32 * vol);
+      case 'chime': {
+        // a soft wooden bell; each sheep in the same pen rings one step higher
+        const f = 523.25 * 2 ** (PENTATONIC[Math.min(opt.note || 0, PENTATONIC.length - 1)] / 12);
+        tone(t, f, 0.5, 0.09 * vol, 'sine');
+        tone(t, f * 2, 0.25, 0.025 * vol, 'sine');
+        burst(t, 2400, 2, 0.02, 0.05 * vol);
         break;
+      }
       case 'close':
         [0, 4, 7, 12].forEach((s, i) => tone(t + i * 0.07, 587.33 * 2 ** (s / 12), 0.4, 0.09 * vol, 'triangle'));
         break;
@@ -58,41 +65,10 @@ export const Sound = {
         break;
       case 'win':
         [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => tone(t + i * 0.09, 523.25 * 2 ** (s / 12), 0.6, 0.12 * vol, 'triangle'));
-        baa(t + 0.75, 1.15, 0.25 * vol);
         break;
     }
   },
 };
-
-// A little "mæh": a buzzy tone with a fast wobble, filtered to sound like a voice.
-function baa(t, pitch, gain) {
-  const dur = 0.42;
-  const o = ctx.createOscillator();
-  o.type = 'sawtooth';
-  const f0 = 330 * pitch;
-  o.frequency.setValueAtTime(f0, t);
-  o.frequency.linearRampToValueAtTime(f0 * 1.06, t + 0.08);
-  o.frequency.linearRampToValueAtTime(f0 * 0.92, t + dur);
-  const lfo = ctx.createOscillator();
-  lfo.frequency.value = 22;
-  const depth = ctx.createGain();
-  depth.gain.value = f0 * 0.05;
-  lfo.connect(depth).connect(o.frequency);
-  const formant = ctx.createBiquadFilter();
-  formant.type = 'bandpass';
-  formant.frequency.value = 1100 * pitch;
-  formant.Q.value = 2.2;
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(gain, t + 0.03);
-  g.gain.setValueAtTime(gain, t + dur - 0.15);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(formant).connect(g).connect(master);
-  o.start(t);
-  lfo.start(t);
-  o.stop(t + dur + 0.05);
-  lfo.stop(t + dur + 0.05);
-}
 
 function burst(t, freq, q, dur, gain) {
   const src = ctx.createBufferSource();

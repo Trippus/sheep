@@ -161,12 +161,24 @@ test('every level is well formed', () => {
   });
 });
 
-test('the first levels can be solved, in no more drags than their par', () => {
-  LEVELS.slice(0, 30).forEach((raw, n) => {
+test('every level carries a solution that wins it in exactly par drags', () => {
+  LEVELS.forEach((raw, n) => {
     const L = S.parseLevel(raw);
-    const sol = S.search(L, S.startState(L), { maxStates: 300000 });
-    assert.ok(sol, `level ${n + 1} can be solved`);
-    assert.ok(sol.drags >= raw.d, `level ${n + 1}: par ${raw.d} is not beaten by the quick search`);
+    const s = S.startState(L);
+    const steps = [...raw.s.matchAll(/([a-z])(\d)/g)].map((m) => [m[1].charCodeAt(0) - 97, ...S.DIRS[+m[2]]]);
+    play(L, s, steps);
+    assert.ok(S.isWon(s), `level ${n + 1} is won by its solution`);
+    let drags = 0;
+    steps.forEach((m, k) => (k === 0 || steps[k - 1][0] !== m[0]) && drags++);
+    assert.equal(drags, raw.d, `level ${n + 1}: par is the solution's drags`);
+  });
+});
+
+test('the meadows are crowded: most cells hold a pen or a sheep', () => {
+  LEVELS.slice(20).forEach((raw, n) => {
+    const L = S.parseLevel(raw);
+    const used = L.pens.reduce((a, p) => a + p.cells.length, 0) + L.sheep.length;
+    assert.ok(used / (L.w * L.h) >= 0.65, `level ${n + 21} is ${Math.round((100 * used) / (L.w * L.h))}% full`);
   });
 });
 

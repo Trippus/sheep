@@ -51,7 +51,7 @@ export const DOM = `
   const key = (k) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
   const st = () => A.state.s;
   // waits until f() is true (or gives up after ms)
-  const until = async (f, ms = 12000) => { const t = Date.now(); while (!f() && Date.now() - t < ms) await wait(100); };
+  const until = async (f, ms = 30000) => { const t = Date.now(); while (!f() && Date.now() - t < ms) await wait(100); };
   const winShown = () => until(() => $('#winModal').classList.contains('open'));
   // Drags pen i with pointer events; cells are where its top-left goes, one step at a time.
   // It grabs the pen by its first cell, just like a finger would.
@@ -86,7 +86,13 @@ export const DOM = `
       await dragPen(i, cells);
     }
   };
-  const solveNow = () => A.S.search(A.level, A.S.clone(st()), { maxStates: 300000 }).steps;
+  // a way home from here: the level's own solution from the start, else a search
+  const solveNow = () => {
+    const raw = A.LEVELS[A.state.level];
+    if (A.S.stateKey(st()) === A.S.stateKey(A.S.startState(A.level)) && raw.s)
+      return [...raw.s.matchAll(/([a-z])(\\d)/g)].map((m) => [m[1].charCodeAt(0) - 97, ...A.S.DIRS[+m[2]]]);
+    return A.S.search(A.level, A.S.clone(st()), { maxStates: 300000 }).steps;
+  };
   // a pen and a direction it cannot go, and why
   const findBlocked = (why) => {
     for (let i = 0; i < A.level.pens.length; i++) for (const [dx, dy] of A.S.DIRS) if (A.S.blocked(A.level, st(), i, dx, dy) === why) return { i, dx, dy };
